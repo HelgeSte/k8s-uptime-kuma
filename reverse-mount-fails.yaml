@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rev-proxy-configmap
+data:
+  default.conf: |
+    server {
+      listen 80;
+
+      location / {
+        proxy_pass http://10.103.233.56:3001/;
+      }
+      }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rev-proxy-deploy
+  labels:
+    app: reverse-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: reverse-proxy-pods
+  template:
+    metadata:
+      labels:
+        app: reverse-proxy-pods
+    spec:
+      volumes:  # mount fails
+        - name: volmap
+          configMap:
+            name: rev-proxy-configmap
+      containers:
+      - image: nginx
+        name: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts: # mount fails
+          - name: volmap
+            mountPath: /etc/nginx/conf.d
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: kuma-nodeport-svc
+  name: kuma-nodeport-svc
+spec:
+  ports:
+  - name: 3001-3001
+    nodePort: 30010
+    port: 3001
+    protocol: TCP
+    targetPort: 3001
+  selector:
+    app: kuma-nodeport-svc
+  type: NodePort
+status:
+  loadBalancer: {}
