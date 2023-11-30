@@ -54,9 +54,7 @@ spec:
     nodePort: 30010
     port: 3001
     protocol: TCP
-    targetPort: 3001
+    targetPort: 80
   selector:
-    app: kuma-nodeport-svc
+    app: reverse-proxy-pods
   type: NodePort
-status:
-  loadBalancer: {}
