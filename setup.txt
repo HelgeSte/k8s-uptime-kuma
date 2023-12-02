@@ -1,0 +1,2 @@
+To fix websocket error for nginx:
+https://github.com/louislam/uptime-kuma/wiki/Reverse-Proxy#nginx

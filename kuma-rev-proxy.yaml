@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  namespace: uptime-kuma
+  name: uptime-kuma
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: uptime-kuma
+  labels:
+    app: my-clusterip
+  name: my-clusterip
+spec:
+  ports:
+  - name: uptime-kuma-clusterip
+    port: 3001
+    protocol: TCP
+    targetPort: 3001
+  selector:
+    app: uptime-kuma
+  type: ClusterIP
+  clusterIP: 10.103.233.56
+status:
+  loadBalancer: {}
+---
+kind: ConfigMap 
+apiVersion: v1 
+metadata: 
+  name: rev-proxy-configmap
+  namespace: uptime-kuma
+data: 
+  default.conf: | 
+      server {
+      listen 80;
+
+      location / {
+              proxy_pass http://10.103.233.56:3001/;
+              proxy_http_version 1.1;
+              proxy_set_header   Upgrade $http_upgrade;
+              proxy_set_header   Connection "upgrade";
+              proxy_set_header   Host $host;
+      }
+      }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rev-proxy-deploy
+  namespace: uptime-kuma
+  labels:
+    app: reverse-proxy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rev-proxy-pods
+  template:
+    metadata:
+      labels:
+        app: rev-proxy-pods
+    spec:
+      volumes:
+        - name: volmap
+          configMap:
+            name: rev-proxy-configmap
+      containers:
+      - image: nginx
+        name: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts: 
+          - name: volmap
+            mountPath: /etc/nginx/conf.d 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: uptime-kuma
+  labels:
+    app: uptime-kuma-np
+  name: reverse-np
+spec:
+  ports:
+  - name: uptime-kuma-np-service
+    nodePort: 30010
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: rev-proxy-pods
+  type: NodePort

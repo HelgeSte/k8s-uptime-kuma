@@ -1,7 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: uptime-kuma
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
+  namespace: uptime-kuma
   labels:
     app: uptime-kuma
   name: uptime-kuma
@@ -21,22 +26,20 @@ spec:
         ports:
         - containerPort: 3001
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  creationTimestamp: null
-  labels:
-    app: uptime-kuma-ip
-  name: uptime-kuma-ip
-spec:
-  ports:
-  - name: uptime-kuma-clusterip
-    port: 3001
-    protocol: TCP
-    targetPort: 3001
-  selector:
-    app: uptime-kuma
-  type: ClusterIP
-  clusterIP: 10.103.233.56
----
-
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  namespace: uptime-kuma
+#  labels:
+#    app: uptime-kuma-ip
+#  name: uptime-kuma-ip
+#spec:
+#  ports:
+#  - name: uptime-kuma-clusterip
+#    port: 3001
+#    protocol: TCP
+#    targetPort: 3001
+#  selector:
+#    app: uptime-kuma
+#  type: ClusterIP
+#  clusterIP: 10.103.233.56
